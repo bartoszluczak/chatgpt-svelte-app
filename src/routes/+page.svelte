@@ -75,10 +75,7 @@
   const saveNewInitialPrompt = async (): Promise<void> => {
       console.log("Save prompt");
 
-      const res = await axios.post('/chat', {
-              "conv_uuid": activeChat,
-              "conv_agent": activeChatAgent,
-              "conv_name": activeChatName,
+      const res = await axios.post('/set-prompt', {
               "body": `initial_input=${newInitialPrompt}`
           }, {
               headers: {
