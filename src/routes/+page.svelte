@@ -76,7 +76,7 @@
       console.log("Save prompt");
 
       const res = await axios.post('/set-prompt', {
-              "body": `initial_input=${newInitialPrompt}`
+              "body": `${newInitialPrompt}`
           }, {
               headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'
