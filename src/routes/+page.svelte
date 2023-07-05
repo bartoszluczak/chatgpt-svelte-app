@@ -3,8 +3,9 @@
   import { onMount } from 'svelte';
   import axios from "axios";
 
+  // axios.defaults.baseURL = 'http://localhost:6001';
+  // axios.defaults.baseURL = 'http://10.128.0.3:6001';
   axios.defaults.baseURL = 'https://29cf-35-208-224-244.ngrok-free.app';
-  // axios.defaults.baseURL = 'https://88db-35-208-224-244.ngrok-free.app';
   axios.defaults.headers.common['Access-Control-Allow-Origin'] = "*"
   axios.defaults.headers.common['Content-Type'] = "application/x-www-form-urlencoded"
   axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true'
@@ -16,9 +17,13 @@
   let respTimes = [];
   let selectedModel = "";
   let chatName = "";
+  let newInitialPrompt = ""
   export let showModal;
+  export let showInitialPromptModal;
   let dialog;
+  let initialInputDialog;
   $: if (dialog && showModal) dialog.showModal();
+  $: if (initialInputDialog && showInitialPromptModal) initialInputDialog.showModal();
   let userInput = '';
 
   function uuidv4() {
@@ -67,6 +72,29 @@
 
   }
 
+  const saveNewInitialPrompt = async (): Promise<void> => {
+      console.log("Save prompt");
+
+      const res = await axios.post('/chat', {
+              "conv_uuid": activeChat,
+              "conv_agent": activeChatAgent,
+              "conv_name": activeChatName,
+              "body": `initial_input=${newInitialPrompt}`
+          }, {
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+              }
+          }
+      )
+
+      const msg = res.data
+      console.log(msg)
+      messages = [...messages, {"role": msg.data.role, "content": msg.data.content}];
+      respTimes = [...respTimes, msg.resp_time]
+
+      newInitialPrompt = "";
+      initialInputDialog.close();
+  }
 
 
   const selectActiveChat = async (chat): Promise<void> => {
@@ -118,6 +146,9 @@
     <div class="conversation">
         <h1>ChatGPT</h1>
         <h3>Active chat: {activeChatName || activeChat}</h3>
+        <div class="edit-initial-prompt-container">
+            <button on:click={() => showInitialPromptModal = true}>Edit initial prompt</button>
+        </div>
         <div class="chat-messages">
             {#if messages && messages.length > 0}
                 {#each messages as message, i (i)}
@@ -157,6 +188,23 @@
             <hr />
             <button autofocus on:click={() => dialog.close()}>Close modal</button>
             <button autofocus on:click={createNewConversation}>Create modal</button>
+        </div>
+    </dialog>
+
+    <dialog
+            bind:this={initialInputDialog}
+            on:close={() => (showInitialPromptModal = false)}
+            on:click|self={() => dialog.close()}
+    >
+        <div on:click|stopPropagation>
+            <h3>Edit initial system prompt</h3>
+            <hr />
+            <div class="dialog-container">
+                <textarea bind:value={newInitialPrompt}></textarea>
+            </div>
+            <hr />
+            <button autofocus on:click={() => initialInputDialog.close()}>Close modal</button>
+            <button autofocus on:click={saveNewInitialPrompt}>Save prompt</button>
         </div>
     </dialog>
 
@@ -218,6 +266,7 @@
       h3 {
         margin-top: 0;
         margin-left: 2rem;
+        margin-bottom: 0;
       }
     }
 
@@ -327,5 +376,19 @@
 
   .active_chat {
     color: rgb(78, 173, 69);
+  }
+
+  .edit-initial-prompt-container {
+    padding-left: 2rem;
+    border-bottom: 1px solid grey;
+    padding-bottom: 1rem;
+    padding-top: 0.5rem;
+  }
+
+  .dialog-container {
+    textarea {
+      width: 100%;
+      height: 10rem;
+    }
   }
 </style>
