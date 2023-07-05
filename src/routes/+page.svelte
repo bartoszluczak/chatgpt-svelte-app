@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import axios from "axios";
 
-  axios.defaults.baseURL = 'http://localhost:6001';
+  axios.defaults.baseURL = 'https://29cf-35-208-224-244.ngrok-free.app';
   // axios.defaults.baseURL = 'https://88db-35-208-224-244.ngrok-free.app';
   axios.defaults.headers.common['Access-Control-Allow-Origin'] = "*"
   axios.defaults.headers.common['Content-Type'] = "application/x-www-form-urlencoded"
